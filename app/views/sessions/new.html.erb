@@ -1,0 +1,15 @@
+<!-- app/views/sessions/new.html.erb -->
+<div class="container mt-5">
+  <h2 class="text-center">Iniciar Sesión</h2>
+  <%= form_with url: sessions_path, method: :post, local: true do |f| %>
+    <div class="mb-3">
+      <%= f.label :email, 'Correo Electrónico', class: 'form-label' %>
+      <%= f.email_field :email, class: 'form-control', required: true %>
+    </div>
+    <div class="mb-3">
+      <%= f.label :password, 'Contraseña', class: 'form-label' %>
+      <%= f.password_field :password, class: 'form-control', required: true %>
+    </div>
+    <%= f.submit 'Iniciar Sesión', class: 'btn btn-primary' %>
+  <% end %>
+</div>
