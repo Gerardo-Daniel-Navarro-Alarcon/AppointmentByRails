@@ -1,0 +1,52 @@
+<%= form_with(model: appointment) do |form| %>
+  <% if appointment.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(appointment.errors.count, "error") %> prohibited this appointment from being saved:</h2>
+
+      <ul>
+        <% appointment.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :employee_id, style: "display: block" %>
+    <%= form.text_field :employee_id %>
+  </div>
+
+  <div>
+    <%= form.label :service_id, style: "display: block" %>
+    <%= form.text_field :service_id %>
+  </div>
+
+  <div>
+    <%= form.label :appointment_date, style: "display: block" %>
+    <%= form.datetime_field :appointment_date %>
+  </div>
+
+  <div>
+    <%= form.label :status, style: "display: block" %>
+    <%= form.text_field :status %>
+  </div>
+
+  <div>
+    <%= form.label :notes, style: "display: block" %>
+    <%= form.text_area :notes %>
+  </div>
+
+  <div>
+    <%= form.label :created_at, style: "display: block" %>
+    <%= form.datetime_field :created_at %>
+  </div>
+
+  <div>
+    <%= form.label :updated_at, style: "display: block" %>
+    <%= form.datetime_field :updated_at %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
