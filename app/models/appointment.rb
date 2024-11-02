@@ -29,6 +29,7 @@ class Appointment < ApplicationRecord
     appointment_products.each do |appointment_product|
       product = appointment_product.product
       if product.stock >= appointment_product.quantity
+        # Actualizar el inventario
         product.update!(stock: product.stock - appointment_product.quantity)
 
         # Registrar el cambio en el inventario
@@ -38,6 +39,9 @@ class Appointment < ApplicationRecord
           reason: 'Uso en Cita',
           appointment: self
         )
+
+        # Alerta de inventario bajo si el stock cae por debajo del umbral
+        check_low_stock_alert(product)
       else
         # Lanzar error si el inventario es insuficiente
         errors.add(:base, "Producto #{product.name} no tiene suficiente inventario")
@@ -59,6 +63,19 @@ class Appointment < ApplicationRecord
         reason: 'Cancelación de Cita',
         appointment: self
       )
+    end
+  end
+
+  # Verificar si el producto tiene inventario bajo y generar alerta
+  def check_low_stock_alert(product)
+    low_stock_threshold = product.low_stock_threshold || 5 # Umbral de inventario bajo (definido por producto o valor predeterminado)
+
+    if product.stock < low_stock_threshold
+      # Aquí podrías enviar una notificación, loguear una alerta o ejecutar cualquier acción necesaria
+      puts "Alerta: El inventario del producto '#{product.name}' está bajo. Stock actual: #{product.stock}"
+      
+      # Opcional: Enviar una notificación por email usando ActionMailer (requiere configurar un mailer)
+      LowStockMailer.notify(product).deliver_now
     end
   end
 end

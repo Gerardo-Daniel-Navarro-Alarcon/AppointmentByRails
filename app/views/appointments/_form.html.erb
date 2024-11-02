@@ -1,52 +1,48 @@
 <%= form_with(model: appointment) do |form| %>
+  <!-- Mensajes de Error -->
   <% if appointment.errors.any? %>
-    <div style="color: red">
-      <h2><%= pluralize(appointment.errors.count, "error") %> prohibited this appointment from being saved:</h2>
-
+    <div class="alert alert-danger">
+      <h2><%= pluralize(appointment.errors.count, "error") %> impide que esta cita sea guardada:</h2>
       <ul>
-        <% appointment.errors.each do |error| %>
-          <li><%= error.full_message %></li>
+        <% appointment.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
         <% end %>
       </ul>
     </div>
   <% end %>
 
-  <div>
-    <%= form.label :employee_id, style: "display: block" %>
-    <%= form.text_field :employee_id %>
+  <!-- Campo: Empleado -->
+  <div class="mb-3">
+    <%= form.label :employee_id, "Empleado", class: "form-label" %>
+    <%= form.collection_select :employee_id, Employee.all, :id, :full_name, prompt: "Seleccione un empleado", class: "form-select" %>
   </div>
 
-  <div>
-    <%= form.label :service_id, style: "display: block" %>
-    <%= form.text_field :service_id %>
+  <!-- Campo: Servicio -->
+  <div class="mb-3">
+    <%= form.label :service_id, "Servicio", class: "form-label" %>
+    <%= form.collection_select :service_id, Service.all, :id, :name, prompt: "Seleccione un servicio", class: "form-select" %>
   </div>
 
-  <div>
-    <%= form.label :appointment_date, style: "display: block" %>
-    <%= form.datetime_field :appointment_date %>
+  <!-- Campo: Fecha y Hora de la Cita -->
+  <div class="mb-3">
+    <%= form.label :appointment_date, "Fecha y Hora de la Cita", class: "form-label" %>
+    <%= form.datetime_field :appointment_date, class: "form-control" %>
   </div>
 
-  <div>
-    <%= form.label :status, style: "display: block" %>
-    <%= form.text_field :status %>
+  <!-- Campo: Estado de la Cita -->
+  <div class="mb-3">
+    <%= form.label :status, "Estado", class: "form-label" %>
+    <%= form.select :status, options_for_select([["Pendiente", "pending"], ["Confirmada", "confirmed"], ["Cancelada", "canceled"]], appointment.status), {}, class: "form-select" %>
   </div>
 
-  <div>
-    <%= form.label :notes, style: "display: block" %>
-    <%= form.text_area :notes %>
+  <!-- Campo: Notas -->
+  <div class="mb-3">
+    <%= form.label :notes, "Notas", class: "form-label" %>
+    <%= form.text_area :notes, class: "form-control", rows: 3 %>
   </div>
 
-  <div>
-    <%= form.label :created_at, style: "display: block" %>
-    <%= form.datetime_field :created_at %>
-  </div>
-
-  <div>
-    <%= form.label :updated_at, style: "display: block" %>
-    <%= form.datetime_field :updated_at %>
-  </div>
-
-  <div>
-    <%= form.submit %>
+  <!-- Botón de Envío -->
+  <div class="mt-3">
+    <%= form.submit "Guardar Cita", class: "btn btn-primary" %>
   </div>
 <% end %>

@@ -2,7 +2,11 @@
 Rails.application.routes.draw do
   # Rutas para los recursos principales
   resources :appointments
-  resources :products
+  resources :products do
+    collection do
+      get 'low_stock' # Ruta para acceder a los productos con inventario bajo
+    end
+  end
   resources :services
   resources :employees
 

@@ -12,6 +12,16 @@ class ProductsController < ApplicationController
     end
   end
 
+  # GET /products/low_stock
+  def low_stock
+    threshold = 5 # Puedes definir un valor predeterminado o hacer que sea configurable
+    @low_stock_products = Product.where("stock < ?", threshold)
+    respond_to do |format|
+      format.html # Renderiza la vista low_stock.html.erb
+      format.json { render json: @low_stock_products }
+    end
+  end
+
   # GET /products/1 or /products/1.json
   def show
     respond_to do |format|
