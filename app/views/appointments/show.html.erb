@@ -48,6 +48,21 @@
   <section class="container mt-5">
     <div class="card shadow-sm p-4">
       <h2 class="card-title fw-bold">Detalles de la Cita</h2>
+
+      <!-- Verificación de estado del servicio y conflictos -->
+      <% if !@appointment.service.active? %>
+        <div class="alert alert-warning">
+          <strong>Advertencia:</strong> El servicio asociado a esta cita no está activo.
+        </div>
+      <% end %>
+
+      <% # Simulación de conflicto de horario (ajustar según lógica real de conflictos) %>
+      <% if @appointment.conflict? %>
+        <div class="alert alert-warning">
+          <strong>Advertencia:</strong> Esta cita tiene un conflicto de horario con otra cita del mismo empleado.
+        </div>
+      <% end %>
+
       <p><strong>Empleado:</strong> <%= @appointment.employee.full_name %></p>
       <p><strong>Servicio:</strong> <%= @appointment.service.name %></p>
       <p><strong>Fecha y Hora:</strong> <%= l(@appointment.appointment_date, format: :long) %></p>

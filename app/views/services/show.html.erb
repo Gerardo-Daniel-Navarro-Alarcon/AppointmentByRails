@@ -47,7 +47,12 @@
   <!-- Sección de Detalles del Servicio -->
   <section class="container mt-5">
     <div class="card shadow-sm p-4">
-      <%= render @service %>
+      <h2 class="fw-bold text-primary"><%= @service.name %></h2>
+      <p><strong>Descripción:</strong> <%= @service.description %></p>
+      <p><strong>Categoría:</strong> <%= @service.category %></p>
+      <p><strong>Precio:</strong> <%= number_to_currency(@service.price) %></p>
+      <p><strong>Duración:</strong> <%= @service.duration %> minutos</p>
+      <p><strong>Estado:</strong> <%= @service.active ? "Activo" : "Inactivo" %></p>
     </div>
 
     <div class="mt-4 d-flex justify-content-between">

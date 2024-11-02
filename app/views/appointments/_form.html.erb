@@ -1,5 +1,10 @@
 <%= form_with(model: appointment) do |form| %>
-  <!-- Mensajes de Error -->
+  <!-- Mensaje informativo sobre la disponibilidad -->
+  <div class="alert alert-info">
+    <strong>Nota:</strong> La disponibilidad del empleado y del servicio se verifica automáticamente al guardar la cita.
+  </div>
+
+  <!-- Mensajes de Error Globales -->
   <% if appointment.errors.any? %>
     <div class="alert alert-danger">
       <h2><%= pluralize(appointment.errors.count, "error") %> impide que esta cita sea guardada:</h2>
@@ -15,18 +20,27 @@
   <div class="mb-3">
     <%= form.label :employee_id, "Empleado", class: "form-label" %>
     <%= form.collection_select :employee_id, Employee.all, :id, :full_name, prompt: "Seleccione un empleado", class: "form-select" %>
+    <% if appointment.errors[:employee_id].any? %>
+      <div class="text-danger"><%= appointment.errors[:employee_id].first %></div>
+    <% end %>
   </div>
 
   <!-- Campo: Servicio -->
   <div class="mb-3">
     <%= form.label :service_id, "Servicio", class: "form-label" %>
-    <%= form.collection_select :service_id, Service.all, :id, :name, prompt: "Seleccione un servicio", class: "form-select" %>
+    <%= form.collection_select :service_id, Service.active, :id, :name, prompt: "Seleccione un servicio", class: "form-select" %>
+    <% if appointment.errors[:service_id].any? %>
+      <div class="text-danger"><%= appointment.errors[:service_id].first %></div>
+    <% end %>
   </div>
 
   <!-- Campo: Fecha y Hora de la Cita -->
   <div class="mb-3">
     <%= form.label :appointment_date, "Fecha y Hora de la Cita", class: "form-label" %>
     <%= form.datetime_field :appointment_date, class: "form-control" %>
+    <% if appointment.errors[:appointment_date].any? %>
+      <div class="text-danger"><%= appointment.errors[:appointment_date].first %></div>
+    <% end %>
   </div>
 
   <!-- Campo: Estado de la Cita -->

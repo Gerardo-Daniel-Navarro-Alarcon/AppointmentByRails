@@ -34,10 +34,13 @@ class AppointmentsController < ApplicationController
     @appointment = Appointment.new(appointment_params)
     respond_to do |format|
       if @appointment.save
-        format.html { redirect_to @appointment, notice: 'Appointment was successfully created.' }
+        format.html { redirect_to @appointment, notice: 'La cita fue creada exitosamente.' }
         format.json { render :show, status: :created, location: @appointment }
       else
-        format.html { render :new, status: :unprocessable_entity }
+        format.html do
+          flash.now[:alert] = @appointment.errors.full_messages.join(", ")
+          render :new, status: :unprocessable_entity
+        end
         format.json { render json: @appointment.errors, status: :unprocessable_entity }
       end
     end
@@ -47,10 +50,13 @@ class AppointmentsController < ApplicationController
   def update
     respond_to do |format|
       if @appointment.update(appointment_params)
-        format.html { redirect_to @appointment, notice: 'Appointment was successfully updated.' }
+        format.html { redirect_to @appointment, notice: 'La cita fue actualizada exitosamente.' }
         format.json { render :show, status: :ok, location: @appointment }
       else
-        format.html { render :edit, status: :unprocessable_entity }
+        format.html do
+          flash.now[:alert] = @appointment.errors.full_messages.join(", ")
+          render :edit, status: :unprocessable_entity
+        end
         format.json { render json: @appointment.errors, status: :unprocessable_entity }
       end
     end
@@ -60,7 +66,7 @@ class AppointmentsController < ApplicationController
   def destroy
     @appointment.destroy!
     respond_to do |format|
-      format.html { redirect_to appointments_url, notice: 'Appointment was successfully destroyed.', status: :see_other }
+      format.html { redirect_to appointments_url, notice: 'La cita fue eliminada exitosamente.', status: :see_other }
       format.json { head :no_content }
     end
   end
@@ -72,8 +78,8 @@ class AppointmentsController < ApplicationController
     @appointment = Appointment.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     respond_to do |format|
-      format.html { redirect_to appointments_url, alert: 'Appointment not found.' }
-      format.json { render json: { error: 'Appointment not found' }, status: :not_found }
+      format.html { redirect_to appointments_url, alert: 'Cita no encontrada.' }
+      format.json { render json: { error: 'Cita no encontrada' }, status: :not_found }
     end
   end
 

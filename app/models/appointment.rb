@@ -10,10 +10,26 @@ class Appointment < ApplicationRecord
   validates :employee_id, :service_id, :appointment_date, :status, presence: true
   validates :status, inclusion: { in: %w[pending confirmed canceled], message: "%{value} is not a valid status" }
   validate :appointment_date_cannot_be_in_the_past
+  validate :employee_availability
+  validate :service_availability
 
   # Callbacks para manejo de inventario
   after_create :deduct_inventory, if: -> { status == 'confirmed' }
   after_destroy :restore_inventory
+
+  # Verificación de conflictos de horario
+  def conflict?
+    return false if service.nil? || service.duration.nil?
+
+    end_time = appointment_date + service.duration.minutes
+
+    # Buscar citas conflictivas del mismo empleado en el mismo rango de tiempo
+    Appointment.where(employee_id: employee_id)
+               .where.not(id: id) # Excluir la cita actual
+               .where("appointment_date < ? AND ? < appointment_date + interval '1 minute' * services.duration", end_time, appointment_date)
+               .joins(:service)
+               .exists?
+  end
 
   # Validación personalizada para evitar fechas en el pasado
   def appointment_date_cannot_be_in_the_past
@@ -23,6 +39,33 @@ class Appointment < ApplicationRecord
   end
 
   private
+
+  # Verificación de disponibilidad del empleado
+  def employee_availability
+    # Asegurarse de que el servicio y su duración están presentes
+    if service.nil? || service.duration.nil?
+      errors.add(:service_id, "El servicio seleccionado no es válido o no tiene una duración especificada.")
+      return
+    end
+
+    # Calcular la hora de fin considerando la duración del servicio
+    end_time = appointment_date + service.duration.minutes
+
+    # Buscar si el empleado tiene citas conflictivas en el horario seleccionado
+    conflicting_appointments = Appointment.where(employee_id: employee_id)
+                                          .where.not(id: id) # Ignorar la cita actual si se está editando
+                                          .where("appointment_date < ? AND ? < appointment_date + interval '1 minute' * services.duration", end_time, appointment_date)
+                                          .joins(:service)
+
+    if conflicting_appointments.exists?
+      errors.add(:appointment_date, "El empleado no está disponible en el horario seleccionado.")
+    end
+  end
+
+  # Verificación de disponibilidad del servicio
+  def service_availability
+    errors.add(:service_id, "El servicio seleccionado no está activo.") unless service&.active?
+  end
 
   # Deducir inventario de productos asociados a la cita
   def deduct_inventory
