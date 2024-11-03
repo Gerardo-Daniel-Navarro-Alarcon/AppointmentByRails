@@ -1,3 +1,5 @@
+# config/environments/development.rb
+
 require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
@@ -48,6 +50,11 @@ Rails.application.configure do
     enable_starttls_auto: true
   }
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+
+  # Configuración de sesión para permitir el uso de cookies
+  config.session_store :cookie_store, key: '_appointment_by_rails_session'
+  config.middleware.use ActionDispatch::Cookies
+  config.middleware.use ActionDispatch::Session::CookieStore, key: '_appointment_by_rails_session'
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log

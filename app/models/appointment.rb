@@ -1,23 +1,11 @@
 # app/models/appointment.rb
 class Appointment < ApplicationRecord
-  # Relaciones
-  belongs_to :employee
-  belongs_to :service
-  has_many :appointment_products, dependent: :destroy
-  has_many :products, through: :appointment_products
+  after_initialize :set_default_status, if: :new_record?
 
-  # Validaciones
-  validates :employee_id, :service_id, :appointment_date, :status, presence: true
-  validates :status, inclusion: { in: %w[pending confirmed canceled], message: "%{value} is not a valid status" }
-  validate :appointment_date_cannot_be_in_the_past
-  validate :employee_availability
-  validate :service_availability
+  # Enum para los estados de la cita en inglés, con traducción a español solo en vistas
+  enum status: { pending: "Pendiente", confirmed: "Confirmada", completed: "Completada" }
 
-  # Callbacks para manejo de inventario
-  after_create :deduct_inventory, if: -> { status == 'confirmed' }
-  after_destroy :restore_inventory
-
-  # Verificación de conflictos de horario
+  # Método de verificación de conflictos de horario (ahora es público)
   def conflict?
     return false if service.nil? || service.duration.nil?
 
@@ -31,14 +19,36 @@ class Appointment < ApplicationRecord
                .exists?
   end
 
+  private
+
+  # Asigna el estado predeterminado como 'pending' si no se ha especificado otro
+  def set_default_status
+    self.status ||= "pending"
+  end
+
+  # Validaciones de campos obligatorios y lógica de estado
+  validates :status, presence: true, inclusion: { in: statuses.keys }
+  validates :employee_id, :service_id, :appointment_date, presence: true
+  validate :appointment_date_cannot_be_in_the_past
+  validate :employee_availability
+  validate :service_availability
+
+  # Relaciones
+  belongs_to :employee
+  belongs_to :service
+  has_many :appointment_products, dependent: :destroy
+  has_many :products, through: :appointment_products
+
+  # Callbacks para manejo de inventario
+  after_create :deduct_inventory, if: -> { status == 'confirmed' }
+  after_destroy :restore_inventory
+
   # Validación personalizada para evitar fechas en el pasado
   def appointment_date_cannot_be_in_the_past
     if appointment_date.present? && appointment_date < Time.current
-      errors.add(:appointment_date, "can't be in the past")
+      errors.add(:appointment_date, "no puede estar en el pasado")
     end
   end
-
-  private
 
   # Verificación de disponibilidad del empleado
   def employee_availability
@@ -109,7 +119,7 @@ class Appointment < ApplicationRecord
       LowStockMailer.notify(product).deliver_now
 
       # Enviar notificación push a la app Expo
-      send_push_notification(product)
+      NotificationService.send_low_stock_alert(product)
     end
   end
 
