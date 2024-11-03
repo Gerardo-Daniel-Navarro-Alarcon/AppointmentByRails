@@ -42,18 +42,14 @@ class Appointment < ApplicationRecord
 
   # Verificación de disponibilidad del empleado
   def employee_availability
-    # Asegurarse de que el servicio y su duración están presentes
     if service.nil? || service.duration.nil?
       errors.add(:service_id, "El servicio seleccionado no es válido o no tiene una duración especificada.")
       return
     end
 
-    # Calcular la hora de fin considerando la duración del servicio
     end_time = appointment_date + service.duration.minutes
-
-    # Buscar si el empleado tiene citas conflictivas en el horario seleccionado
     conflicting_appointments = Appointment.where(employee_id: employee_id)
-                                          .where.not(id: id) # Ignorar la cita actual si se está editando
+                                          .where.not(id: id)
                                           .where("appointment_date < ? AND ? < appointment_date + interval '1 minute' * services.duration", end_time, appointment_date)
                                           .joins(:service)
 
@@ -72,21 +68,15 @@ class Appointment < ApplicationRecord
     appointment_products.each do |appointment_product|
       product = appointment_product.product
       if product.stock >= appointment_product.quantity
-        # Actualizar el inventario
         product.update!(stock: product.stock - appointment_product.quantity)
-
-        # Registrar el cambio en el inventario
         InventoryLog.create!(
           product: product,
           change: -appointment_product.quantity,
           reason: 'Uso en Cita',
           appointment: self
         )
-
-        # Alerta de inventario bajo si el stock cae por debajo del umbral
         check_low_stock_alert(product)
       else
-        # Lanzar error si el inventario es insuficiente
         errors.add(:base, "Producto #{product.name} no tiene suficiente inventario")
         raise ActiveRecord::Rollback
       end
@@ -99,7 +89,6 @@ class Appointment < ApplicationRecord
       product = appointment_product.product
       product.update!(stock: product.stock + appointment_product.quantity)
 
-      # Registrar la devolución de inventario
       InventoryLog.create!(
         product: product,
         change: appointment_product.quantity,
@@ -111,14 +100,42 @@ class Appointment < ApplicationRecord
 
   # Verificar si el producto tiene inventario bajo y generar alerta
   def check_low_stock_alert(product)
-    low_stock_threshold = product.low_stock_threshold || 5 # Umbral de inventario bajo (definido por producto o valor predeterminado)
+    low_stock_threshold = product.low_stock_threshold || 5
 
     if product.stock < low_stock_threshold
-      # Aquí podrías enviar una notificación, loguear una alerta o ejecutar cualquier acción necesaria
       puts "Alerta: El inventario del producto '#{product.name}' está bajo. Stock actual: #{product.stock}"
       
-      # Opcional: Enviar una notificación por email usando ActionMailer (requiere configurar un mailer)
+      # Enviar correo de alerta
       LowStockMailer.notify(product).deliver_now
+
+      # Enviar notificación push a la app Expo
+      send_push_notification(product)
     end
+  end
+
+  # Enviar notificación push usando Expo
+  def send_push_notification(product)
+    require 'net/http'
+    require 'uri'
+    require 'json'
+
+    uri = URI.parse('https://exp.host/--/api/v2/push/send')
+    token = "TOKEN_DE_LA_APP_EXPO" # Reemplaza con el token de notificación de Expo
+
+    header = { 'Content-Type': 'application/json' }
+    message = {
+      to: token,
+      sound: 'default',
+      title: 'Alerta de Inventario Bajo',
+      body: "El producto '#{product.name}' está bajo en inventario. Stock actual: #{product.stock}"
+    }
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+    request = Net::HTTP::Post.new(uri.request_uri, header)
+    request.body = message.to_json
+
+    response = http.request(request)
+    puts "Notificación enviada: #{response.body}"
   end
 end
